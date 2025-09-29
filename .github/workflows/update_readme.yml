@@ -6,10 +6,10 @@ on:
 jobs:
   update_activity:
     runs-on: ubuntu-latest
-    - steps: actions/checkout@v4
-    - uses: Update Github Activity
+    steps: 
+    - uses: actions/checkout@v4
+    - name: Update Github Activity
       uses: TheDanniCraft/activity-log@v1
       with:
         GITHUB_USERNAME: "oscardelgadoo"
         GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
-        
