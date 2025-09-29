@@ -1,17 +1,22 @@
-name: Update GitHub Activity
+name: Update README Activity
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  update_activity:
+  update-activity:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Update GitHub Activity in README
-        uses: TheDanniCraft/activity-log@v1
+        uses: jamesgeorge007/github-activity-readme@v0.3.0
         with:
           GITHUB_USERNAME: oscardelgadoo
+          COMMIT_MSG: "chore(readme): update recent activity [skip ci]"
+        env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
