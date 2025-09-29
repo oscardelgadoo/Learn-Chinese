@@ -1,17 +1,18 @@
-name: Update readme Activity
+name: Update README Activity
 
 on:
   workflow_dispatch:
 
-permissions: 
+permissions:
   contents: write
+
 jobs:
   update-activity:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Checkout repository
-        
+        uses: actions/checkout@v4
+
       - name: Update GitHub Activity in README
         uses: jamesgeorge007/github-activity-readme@v0.3.0
         with:
@@ -19,4 +20,5 @@ jobs:
           COMMIT_MSG: "chore(readme): update recent activity [skip ci]"
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+
 
