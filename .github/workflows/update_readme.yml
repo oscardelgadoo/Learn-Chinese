@@ -6,12 +6,12 @@ on:
 permissions: 
   contents: write
 jobs:
-  update_activity:
+  update-activity:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Checkout repository
-        uses: actions/checkout@v4
-
+        
       - name: Update GitHub Activity in README
         uses: jamesgeorge007/github-activity-readme@v0.3.0
         with:
