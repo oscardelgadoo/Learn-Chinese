@@ -1,66 +1,17 @@
-name: Update README with recent activity
+name: Update GitHub Activity
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 12 * * *'   # daily at 12:00 UTC (adjust if needed)
-  push:
-    branches:
-      - main
-
-permissions:
-  contents: write
-  issues: read
-  pull-requests: read
+  workflow_dispatch: 
 
 jobs:
-  update-readme:
+  update_activity:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Update GitHub Activity in README
+        uses: TheDanniCraft/activity-log@v1
         with:
-          fetch-depth: 0
-
-      - name: Prevent loop if last commit was by this action
-        run: |
-          last_msg=$(git log -1 --pretty=%B)
-          echo "Last commit message: $last_msg"
-          if echo "$last_msg" | grep -qi "\[skip ci\]"; then
-            echo "Skipping run to avoid loop (found [skip ci])."
-            exit 0
-          fi
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install requests
-
-      - name: Run update README script
-        env:
-          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: python .github/scripts/update_readme.py
-
-      - name: Commit & push changes (if any)
-        env:
-          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-            exit 0
-          fi
-          git commit -m "ci: update README with recent activity [skip ci]"
-          # Use token to push to main (replace main if your default branch is 'main')
-          git remote set-url origin https://x-access-token:${REPO_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          git push origin HEAD:main
-
-
-
+          GITHUB_USERNAME: oscardelgadoo
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
