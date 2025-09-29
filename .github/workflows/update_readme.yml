@@ -1,25 +1,72 @@
-name: Update README Activity 
-#final supuestamente
+name: Update README Activity
+
 on:
-  workflow_dispatch:
+  workflow_dispatch:            
+  schedule:
+    - cron: "0 */12 * * *"  
 
 permissions:
-  contents: write
+  contents: write              
 
 jobs:
-  update-activity:
+  update:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Update GitHub Activity in README
-        uses: jamesgeorge007/github-activity-readme@v0.3.0
+      # (Sanity) Verifica que el PAT puede leer el repo
+      - name: Sanity check PAT
+        uses: actions/github-script@v7
         with:
-          GH_USERNAME: 'oscardelgadoo'
-          COMMIT_MSG: 'chore(readme): update recent activity [skip ci]'
-        env:
-          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+          github-token: ${{ secrets.REPO_TOKEN }}
+        # si no tiene permisos correctos, esto dará 404
+          script: |
+            const { owner, repo } = context.repo;
+            await github.rest.repos.get({ owner, repo });
+
+      # Construye el texto con los últimos 5 commits
+      - name: Build commit activity
+        id: commits
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.REPO_TOKEN }}
+          result-encoding: string
+          script: |
+            const { owner, repo } = context.repo;
+            const res = await github.rest.repos.listCommits({ owner, repo, per_page: 5 });
+            const lines = (res.data || []).map(c =>
+              `- ${c.commit.author?.date?.substring(0,10) ?? 'N/A'}: ${c.commit.message.split('\n')[0]} (${c.sha.substring(0,7)})`
+            ).join('\n');
+            return lines || '- No recent commits';
+
+      
+      - name: Update README markers
+        shell: bash
+        run: |
+          set -e
+          FILE="README.md"
+          START="<!--START_SECTION:activity-->"
+          END="<!--END_SECTION:activity-->"
+          CONTENT="${{ steps.commits.outputs.result }}"
+          grep -q "$START" "$FILE" && grep -q "$END" "$FILE"
+          awk -v start="$START" -v end="$END" -v repl="$CONTENT" '
+            $0 ~ start { print; print repl; skip=1; next }
+            $0 ~ end   { skip=0 }
+            !skip
+          ' "$FILE" > README.tmp && mv README.tmp "$FILE"
+
+    
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs(readme): auto-update recent activity [skip ci]"
+            git push
+          fi
 
